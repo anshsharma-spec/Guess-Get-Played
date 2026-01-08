@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Number Quest: The Hilarious Guessing Adventure</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        #level-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        #message {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #555;
+        }
+        
+        #guess-input {
+            padding: 10px;
+            font-size: 16px;
+            width: 100px;
+            margin-right: 10px;
+        }
+        
+        #submit-guess {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #submit-guess:hover {
+            background-color: #45a049;
+        }
+        
+        #progress {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        
+        #fun-fact {
+            margin-top: 20px;
+            font-style: italic;
+            color: #888;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <h1>Mystery Number Quest</h1>
+        <p>Welcome to the number guessing game with twists that will tickle your funny bone! Advance through levels, each with a hidden surprise. Can you uncover them all?</p>
+        <div id="level-title">Level 1: The Innocent Beginnings</div>
+        <p id="range-info">Guess a number between 1 and 10.</p>
+        <input type="number" id="guess-input" placeholder="Your guess">
+        <button id="submit-guess">Guess!</button>
+        <div id="message"></div>
+        <div id="progress">Guesses left: Unlimited | Level: 1/5</div>
+        <div id="fun-fact" class="hidden"></div>
+        <button id="next-level" class="hidden">Next Level</button>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let secretNumber;
+        let maxGuesses;
+        let guessesLeft;
+        let rangeMin = 1;
+        let rangeMax;
+        let twistActive = false;
+
+        const levelConfigs = [{
+            title: "Level 1: The Innocent Beginnings",
+            rangeMax: 10,
+            maxGuesses: Infinity,
+            twist: null,
+            funFact: "Did you know? Numbers were invented by a bored caveman counting sheep... or was it goats?"
+        }, {
+            title: "Level 2: The Sneaky Whispers",
+            rangeMax: 50,
+            maxGuesses: 10,
+            twist: 'reverseHints',
+            funFact: "Twist revealed: Sometimes the game lies! Like that time your friend said your haircut looked great."
+        }, {
+            title: "Level 3: The Shifting Shadows",
+            rangeMax: 100,
+            maxGuesses: 7,
+            twist: 'shiftingNumber',
+            funFact: "Twist revealed: The number is alive and runs away if you're too slow! It's got places to be."
+        }, {
+            title: "Level 4: The Mirror Maze",
+            rangeMax: 200,
+            maxGuesses: 8,
+            twist: 'mirrorGuesses',
+            funFact: "Twist revealed: Your guesses get mirrored! Because why not add a funhouse effect?"
+        }, {
+            title: "Level 5: The Comedic Chaos",
+            rangeMax: 500,
+            maxGuesses: 10,
+            twist: 'punnyOffset',
+            funFact: "Twist revealed: The number dodges your guesses with puns! It's basically a stand-up comedian in numeric form."
+        }];
+
+        function startLevel(level) {
+            const config = levelConfigs[level - 1];
+            document.getElementById('level-title').textContent = config.title;
+            rangeMax = config.rangeMax;
+            maxGuesses = config.maxGuesses;
+            guessesLeft = maxGuesses;
+            twistActive = config.twist;
+            document.getElementById('range-info').textContent = `Guess a number between ${rangeMin} and ${rangeMax}.`;
+            document.getElementById('progress').textContent = `Guesses left: ${guessesLeft === Infinity ? 'Unlimited' : guessesLeft} | Level: ${level}/5`;
+            document.getElementById('message').textContent = '';
+            document.getElementById('fun-fact').classList.add('hidden');
+            document.getElementById('next-level').classList.add('hidden');
+            generateSecretNumber();
+        }
+
+        function generateSecretNumber() {
+            secretNumber = Math.floor(Math.random() * (rangeMax - rangeMin + 1)) + rangeMin;
+            console.log(`Secret number for level ${currentLevel}: ${secretNumber}`); // For debugging, remove in production
+        }
+
+        let wrongGuessCount = 0;
+        let previousGuess = null;
+
+        document.getElementById('submit-guess').addEventListener('click', function() {
+            let guess = parseInt(document.getElementById('guess-input').value);
+            if (isNaN(guess) || guess < rangeMin || guess > rangeMax) {
+                document.getElementById('message').textContent = 'Please enter a valid number within the range!';
+                return;
+            }
+
+
+            if (twistActive === 'mirrorGuesses' && Math.random() < 0.3) {
+
+                const mirrored = parseInt(guess.toString().split('').reverse().join(''));
+                if (mirrored >= rangeMin && mirrored <= rangeMax) {
+                    guess = mirrored;
+                    document.getElementById('message').textContent += ' (Twist: Your guess got mirrored! 😂)';
+                }
+            }
+
+            if (guessesLeft !== Infinity) {
+                guessesLeft--;
+            }
+
+            if (guess === secretNumber) {
+                document.getElementById('message').textContent = 'Congratulations! You guessed it right!';
+                revealFunFact();
+                if (currentLevel < 5) {
+                    document.getElementById('next-level').classList.remove('hidden');
+                } else {
+                    document.getElementById('message').textContent += ' You beat the game! 🎉';
+                }
+            } else {
+                let hint = guess < secretNumber ? 'too low' : 'too high';
+
+
+                if (twistActive === 'reverseHints' && Math.random() < 0.2) {
+                    hint = hint === 'too low' ? 'too high' : 'too low';
+
+                }
+
+                if (twistActive === 'shiftingNumber') {
+                    wrongGuessCount++;
+                    if (wrongGuessCount % 3 === 0) {
+                        secretNumber = Math.min(secretNumber + 1, rangeMax);
+                        hint += ' (The number just shifted! 😈)';
+                    }
+                }
+
+                if (twistActive === 'punnyOffset' && previousGuess !== null) {
+
+                    const offset = Math.floor(Math.random() * 5) + 1;
+                    secretNumber = previousGuess + offset;
+                    hint += ` (Dodged with a +${offset} pun offset! Why? Because it's "number" one at escaping!)`;
+                }
+
+                document.getElementById('message').textContent = `Nope, that's ${hint}!`;
+                if (guessesLeft === 0) {
+                    document.getElementById('message').textContent = `Game over! The secret number was ${secretNumber}.`;
+                    revealFunFact();
+                }
+            }
+
+            document.getElementById('progress').textContent = `Guesses left: ${guessesLeft === Infinity ? 'Unlimited' : guessesLeft} | Level: ${currentLevel}/5`;
+            document.getElementById('guess-input').value = '';
+            previousGuess = guess;
+        });
+
+        document.getElementById('next-level').addEventListener('click', function() {
+            currentLevel++;
+            startLevel(currentLevel);
+        });
+
+        function revealFunFact() {
+            const config = levelConfigs[currentLevel - 1];
+            document.getElementById('fun-fact').textContent = config.funFact;
+            document.getElementById('fun-fact').classList.remove('hidden');
+        }
+
+        startLevel(1);
+    </script>
+</body>
+
+</html>
